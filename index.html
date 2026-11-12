@@ -3,50 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой цифровой щит</title>
+    <title>Мир без опасности | Futuristic Safe</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f0f4f8; color: #333; margin: 0; padding: 0; }
-        .header { background-color: #2563eb; color: white; text-align: center; padding: 40px 20px; }
-        .header h1 { margin: 0; font-size: 28px; }
-        .header p { font-size: 18px; }
-        .content { max-width: 800px; margin: 20px auto; padding: 0 20px; }
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-left: 8px solid #ef4444; }
-        .card h2 { color: #1e3a8a; margin-top: 0; }
-        .card p { font-size: 16px; line-height: 1.5; }
-        .alert { background-color: #fef2f2; border: 2px solid #ef4444; padding: 20px; border-radius: 10px; text-align: center; margin-top: 30px; }
-        .alert h3 { color: #b91c1c; margin-top: 0; }
-        .footer { text-align: center; padding: 20px; color: #666; font-size: 14px; }
+        :root {
+            --bg-dark: #0a0a1a;
+            --primary: #00f2fe;
+            --secondary: #4facfe;
+            --accent: #fa709a;
+            --text-main: #ffffff;
+            --text-muted: #a0a0b0;
+            --success: #00f260;
+            --danger: #ff4b2b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* Принудительно включаем прокрутку */
+        html, body {
+            min-height: 100vh;
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .bg-blobs {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 10s infinite alternate;
+        }
+
+        .blob-1 { width: 400px; height: 400px; background: var(--primary); top: -100px; left: -100px; }
+        .blob-2 { width: 300px; height: 300px; background: var(--accent); bottom: -50px; right: -50px; animation-delay: -5s; }
+
+        header {
+            padding: 5rem 2rem 3rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 242, 254, 0.15);
+            border-color: rgba(0, 242, 254, 0.4);
+        }
+
+        .card h3 { color: var(--primary); font-size: 1.3rem; margin-bottom: 0.8rem; }
+        .card p { color: var(--text-muted); font-size: 0.95rem; }
+
+        .quiz-section {
+            margin-top: 4rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .quiz-header h2 { font-size: 1.8rem; }
+        .score-board { color: var(--primary); font-weight: bold; font-size: 1.2rem; }
+
+        .progress-container { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 2rem; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--secondary), var(--primary)); transition: width 0.5s ease; }
+
+        .question { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .question p { font-size: 1.1rem; margin-bottom: 1rem; font-weight: 600; }
+
+        .options button {
+            display: block; width: 100%; padding: 1rem; margin: 0.6rem 0;
+            background: rgba(255,255,255,0.05); color: var(--text-main);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+            cursor: pointer; font-size: 1rem; transition: all 0.2s; text-align: left;
+        }
+
+        .options button:hover { background: rgba(0, 242, 254, 0.1); border-color: var(--primary); transform: translateX(5px); }
+        .options button.correct { background: rgba(0, 242, 96, 0.2); color: var(--success); border-color: var(--success); }
+        .options button.wrong { background: rgba(255, 75, 43, 0.2); color: var(--danger); border-color: var(--danger); }
+
+        footer { text-align: center; padding: 3rem; color: var(--text-muted); margin-top: 3rem; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 30px); } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Мой цифровой щит</h1>
-        <p>Простые правила, которые спасут твои деньги</p>
+
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
     </div>
-    <div class="content">
-        <div class="card">
-            <h2>Правило 1: Коды из СМС — это секрет!</h2>
-            <p>Никогда и никому не называйте коды из СМС. Если вам звонит человек, который говорит, что он «из банка» или «из полиции» — знайте, настоящие сотрудники никогда не спрашивают эти коды. Положите трубку!</p>
+
+    <header>
+        <h1>Мир без опасности</h1>
+        <p>Будущее начинается с безопасности. Изучай правила, защищай себя и своих близких.</p>
+    </header>
+
+    <div class="container">
+        <div class="grid">
+            <div class="card">
+                <h3>🚦 Дорожная безопасность</h3>
+                <p>Знание ПДД — залог сохранения жизни. Переходим дорогу только по пешеходному переходу на зеленый свет!</p>
+            </div>
+            <div class="card">
+                <h3>🔥 Пожарная безопасность</h3>
+                <p>Соблюдение правил обращения с огнем. Умение пользоваться огнетушителем и знать номера экстренных служб.</p>
+            </div>
+            <div class="card">
+                <h3>🛡️ Безопасность в быту</h3>
+                <p>Осторожное обращение с электроприборами, газом и химией. Безопасность начинается с внимательности к мелочам.</p>
+            </div>
+            <div class="card">
+                <h3>🤝 Профилактика терроризма</h3>
+                <p>Бдительность в общественных местах. Не трогаем бесхозные предметы, сообщаем о подозрительных ситуациях взрослым.</p>
+            </div>
         </div>
-        <div class="card">
-            <h2>Правило 2: Не верьте в «безопасные счета»</h2>
-            <p>Мошенники очень любят пугать. Они говорят: «С вашей карты пытаются украсть деньги, нужно срочно перевести их на безопасный счет». Такого счета не существует. Если вы переведете деньги — они пропадут навсегда.</p>
-        </div>
-        <div class="card">
-            <h2>Правило 3: Не спешите паниковать</h2>
-            <p>Если вам пишут: «Мам, я попал в беду, срочно скинь денег» — не верьте сразу. Мошенники часто взламывают страницы в соцсетях. Позвоните этому человеку по обычному телефону и спросите, всё ли у него хорошо.</p>
-        </div>
-        <div class="card">
-            <h2>Правило 4: Не переходите по странным ссылкам</h2>
-            <p>Если вам пришло сообщение: «Ты выиграл миллион, перейди по ссылке» или «Твоя страница будет удалена, зайди сюда» — не нажимайте на ссылку. Так мошенники воруют пароли.</p>
-        </div>
-        <div class="alert">
-            <h3>Запомни главное!</h3>
-            <p>Если по телефону разговор про деньги, карты или коды — лучше просто положить трубку. Перезвоните родителям или в банк сами по официальному номеру.</p>
+
+        <div class="quiz-section">
+            <div class="quiz-header">
+                <h2>Проверь свои знания 🎯</h2>
+                <div class="score-board" id="scoreBoard">0 / 2</div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="question">
+                <p><strong>1. По какому номеру нужно звонить в единую службу спасения?</strong></p>
+                <div class="options">
+                    <button onclick="checkAnswer(this, false, 'q1')">102</button>
+                    <button onclick="checkAnswer(this, true, 'q1')">112</button>
+                    <button onclick="checkAnswer(this, false, 'q1')">103</button>
+                </div>
+            </div>
+
+            <div class="question">
+                <p><strong>2. Как правильно переходить дорогу?</strong></p>
+                <div class="options">
+                    <button onclick="checkAnswer(this, false, 'q2')">Быстро перебежать в неположенном месте</button>
+                    <button onclick="checkAnswer(this, true, 'q2')">По пешеходному переходу на зеленый сигнал</button>
+                    <button onclick="checkAnswer(this, false, 'q2')">Глядя в телефон</button>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="footer">
-        <p>Проект по кибербезопасности. Автор: [Артюшова Стефанида]</p>
-    </div>
+
+    <footer>
+        <p>Конкурсная работа. Номинация 4.9. «Мир без опасности»</p>
+    </footer>
+
+    <script>
+        let score = 0;
+        const totalQuestions = 2;
+        let answeredQuestions = new Set();
+
+        function checkAnswer(button, isCorrect, questionId) {
+            if (answeredQuestions.has(questionId)) return;
+            
+            answeredQuestions.add(questionId);
+            const options = button.parentElement.querySelectorAll('button');
+
+            if (isCorrect) {
+                button.classList.add('correct');
+                button.innerText += " ✅ Верно!";
+                score++;
+            } else {
+                button.classList.add('wrong');
+                button.innerText += " ❌ Ошибка";
+                options.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('true')) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+            
+            document.getElementById('scoreBoard').innerText = `${score} / ${totalQuestions}`;
+            const progressPercent = (answeredQuestions.size / totalQuestions) * 100;
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+            
+            if (score === totalQuestions) {
+                setTimeout(() => {
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                }, 500);
+            }
+        }
+    </script>
 </body>
 </html>
